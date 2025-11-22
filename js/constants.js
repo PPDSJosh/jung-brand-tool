@@ -156,38 +156,6 @@ export const ANIMATION_PRESETS = [
         }
     },
     {
-        name: "Deep Breath",
-        settings: {
-            pattern: 'breathe',
-            speed: 1.0,
-            amplitude: 0.5,
-            frequency: 1.0,
-            spread: 0.5,
-            rotation: 0,
-            centerX: 0.5,
-            centerY: 0.5,
-            autoPanX: false,
-            autoPanY: false,
-            ease: 'power1.inOut'
-        }
-    },
-    {
-        name: "Aurora Borealis",
-        settings: {
-            pattern: 'aurora',
-            speed: 2.0,
-            amplitude: 0.3,
-            frequency: 1.5,
-            spread: 0.5,
-            rotation: 90,
-            centerX: 0.5,
-            centerY: 0.5,
-            autoPanX: false,
-            autoPanY: false,
-            ease: 'none'
-        }
-    },
-    {
         name: "Rainstorm",
         settings: {
             pattern: 'rain',
@@ -201,28 +169,6 @@ export const ANIMATION_PRESETS = [
             autoPanX: false,
             autoPanY: false,
             ease: 'power2.out'
-        }
-    },
-    {
-        name: "Zen Garden",
-        settings: {
-            pattern: 'ripple',
-            speed: 0.5,
-            amplitude: 0.1,
-            frequency: 0.5,
-            spread: 0.5,
-            rotation: 0,
-            centerX: 0.5,
-            centerY: 0.5,
-            autoPanX: true,
-            autoPanXMin: 0.3,
-            autoPanXMax: 0.7,
-            autoPanXSpeed: 0.2,
-            autoPanY: true,
-            autoPanYMin: 0.4,
-            autoPanYMax: 0.6,
-            autoPanYSpeed: 0.15,
-            ease: 'sine.inOut'
         }
     }
 ];

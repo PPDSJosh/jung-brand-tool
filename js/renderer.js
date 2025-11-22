@@ -302,6 +302,25 @@ export class Renderer {
         const d4 = Math.sqrt((width-cx)**2 + (height-cy)**2);
         const maxDist = Math.max(d1, d2, d3, d4);
 
+        // Parse Ease Function (optimized: do once per frame)
+        let easeFunc = null;
+        if (typeof gsap !== 'undefined' && animConfig && animConfig.ease && animConfig.ease !== 'none') {
+            try {
+                easeFunc = gsap.parseEase(animConfig.ease);
+            } catch(e) {
+                easeFunc = null;
+            }
+        }
+
+        // Helper to apply ease to a -1 to 1 sine wave
+        // sinVal should be -1 to 1
+        const applyEase = (sinVal) => {
+            if (!easeFunc) return sinVal;
+            const norm = (sinVal + 1) / 2; // 0 to 1
+            const eased = easeFunc(norm); // 0 to 1
+            return (eased * 2) - 1; // -1 to 1
+        };
+
         for (let x = 0; x <= width + cellSize; x += cellSize) {
             for (let y = 0; y <= height + cellSize; y += cellSize) {
                 
@@ -341,13 +360,15 @@ export class Renderer {
                     mod = flowVal * amp; 
                 } 
                 else if (animPattern === 'ripple' || animPattern === 'radial') {
-                    mod = Math.sin(fd - t * 5) * amp;
+                    const wave = Math.sin(fd - t * 5);
+                    mod = applyEase(wave) * amp;
                 }
                 else if (animPattern === 'ocean') {
                     const dx = Math.cos(rotRad);
                     const dy = Math.sin(rotRad);
                     const proj = x * dx + y * dy;
-                    mod = Math.sin(proj * 0.005 * freq - t * 3) * amp;
+                    const wave = Math.sin(proj * 0.005 * freq - t * 3);
+                    mod = applyEase(wave) * amp;
                 }
                 else if (animPattern === 'breathe') {
                     mod = (this.breathVal - 0.5) * 2 * amp; 
@@ -356,18 +377,18 @@ export class Renderer {
                     const offset = (width * 0.5) * spread;
                     const cx1 = (width * 0.5) - offset;
                     const cx2 = (width * 0.5) + offset;
-                    const cyFocus = height * 0.5; // Should this follow centerY too?
-                    // For dual, maybe keep vertical center fixed or follow centerY?
-                    // Let's follow centerY for consistency
                     const cyDual = height * centerY;
 
                     const d1 = Math.sqrt((x - cx1)**2 + (y - cyDual)**2) * 0.01 * freq;
                     const d2 = Math.sqrt((x - cx2)**2 + (y - cyDual)**2) * 0.01 * freq;
                     
+                    // Apply ease to each wave component independently? Or the sum?
+                    // Usually sum is better for interference patterns
                     const wave1 = Math.sin(d1 - t * 4);
                     const wave2 = Math.sin(d2 - t * 4);
                     
-                    mod = (wave1 + wave2) * amp;
+                    // Let's ease the individual components for sharper ripples
+                    mod = (applyEase(wave1) + applyEase(wave2)) * amp;
                 }
                 else if (animPattern === 'dual-ripple') {
                     const offset = (width * 0.5) * spread;
@@ -381,7 +402,7 @@ export class Renderer {
                     const wave1 = Math.sin(d1 - t * 5);
                     const wave2 = Math.sin(d2 - t * 5);
                     
-                    mod = Math.max(wave1, wave2) * amp;
+                    mod = Math.max(applyEase(wave1), applyEase(wave2)) * amp;
                 }
                 else if (animPattern === 'rain') {
                     // Sum influence of all active drops
@@ -401,6 +422,8 @@ export class Renderer {
                     }
                 }
                 else if (animPattern === 'aurora') {
+                    // Removing this logic effectively but keeping block to prevent error if selected somehow
+                    // Though user asked to remove "Aurora Borealis" preset, the logic is here.
                     const flow = Math.sin(y * 0.005 * freq + t) + Math.sin(y * 0.01 * freq - t * 0.5);
                     mod = Math.sin(x * 0.005 * freq + flow * 2) * amp;
                 }
@@ -574,12 +597,6 @@ export class Renderer {
             const d4 = Math.sqrt((width-cx)**2 + (height-cy)**2);
             const maxDist = Math.max(d1, d2, d3, d4);
 
-            // We can't replicate perlin noise efficiently here without including the library logic or duplicating it
-            // For this simplified SVG export, we'll capture the static state or just use the basic math
-            // Ideally we'd use the exact same logic. 
-            // Let's try to reuse the logic by copy-pasting the loop body essentially
-            // Note: Animation state (time) is used. We should use this.time
-            
             const amp = this.animVals.amplitude;
             const freq = this.animVals.frequency;
             const time = this.time;

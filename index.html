@@ -15,8 +15,10 @@
     <div class="app-container">
         <aside class="sidebar">
             <header>
-                <h1>CG Jung Institute</h1>
-                <h2>Asset Generator</h2>
+                <div class="logo-wrapper" style="width: 100%; margin-bottom: 15px; padding: 0 10px;">
+                    <img src="assets/logo.png" alt="CG Jung Institute Logo" style="width: 100%; height: auto;">
+                </div>
+                <h2 style="margin-top: 0;">Asset Generator</h2>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <button id="expandAllBtn" class="btn-secondary" style="font-size: 0.7rem; flex: 1;">Expand All</button>
                     <button id="collapseAllBtn" class="btn-secondary" style="font-size: 0.7rem; flex: 1;">Collapse All</button>
@@ -30,6 +32,9 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="group-content">
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; margin-top: 0;">
+                        Set the output dimensions of your asset. Choose from common social media presets or enter custom values.
+                    </p>
                     <label for="dimensionSelect">Dimensions</label>
                     <select id="dimensionSelect"></select>
                     
@@ -53,6 +58,9 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="group-content">
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; margin-top: 0;">
+                        Define the base layer. Choose a dynamic gradient or a solid brand color.
+                    </p>
                     <div class="radio-group" style="display: flex; gap: 15px; margin-bottom: 15px;">
                         <label style="display: inline-flex; align-items: center; gap: 5px;">
                             <input type="radio" name="bgMode" value="gradient" checked> Gradient
@@ -99,6 +107,9 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="group-content">
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; margin-top: 0;">
+                        Control the motion of the background pattern. Use presets or customize the physics.
+                    </p>
                     <label>Preset</label>
                     <select id="animPresetSelect" style="margin-bottom: 15px;">
                         <option value="custom">Custom</option>
@@ -129,28 +140,28 @@
                     <a href="#" id="animAdvancedToggle" style="display: block; text-align: center; font-size: 0.8rem; color: #00AFD8; text-decoration: none; margin: 15px 0 5px;">Show Advanced Settings ▼</a>
 
                     <div id="animAdvancedContent" style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 10px;">
-                        <label>Speed <span id="animSpeedVal">3</span></label>
+                        <label>Speed - <span id="animSpeedVal">3</span></label>
                         <input type="range" id="animSpeed" min="0" max="5" step="0.1">
 
-                        <label>Impact (Amplitude) <span id="animAmpVal">0.3</span></label>
+                        <label>Impact (Amplitude) - <span id="animAmpVal">0.3</span></label>
                         <span class="help-text">Strength of the wave distortion.</span>
                         <input type="range" id="animAmp" min="0" max="1" step="0.05">
 
-                        <label>Scale (Frequency) <span id="animFreqVal">1.0</span></label>
+                        <label>Scale (Frequency) - <span id="animFreqVal">1.0</span></label>
                         <span class="help-text">Zoom level of the pattern details.</span>
                         <input type="range" id="animFreq" min="0.1" max="5.0" step="0.1">
 
-                        <label>Separation (Spread) <span id="animSpreadVal">0.5</span></label>
+                        <label>Separation (Spread) - <span id="animSpreadVal">0.5</span></label>
                         <span class="help-text">Distance between dual wave centers.</span>
                         <input type="range" id="animSpread" min="0" max="1" step="0.05">
 
-                        <label>Rotation <span id="animRotationVal">0</span>°</label>
+                        <label>Rotation - <span id="animRotationVal">0</span>°</label>
                         <input type="range" id="animRotation" min="0" max="360" step="1">
 
                         <!-- Center X Controls -->
                         <div style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label>Center X <span id="animCenterXVal">0.5</span></label>
+                                <label>Center X - <span id="animCenterXVal">0.5</span></label>
                                 <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                                     <input type="checkbox" id="animLoopX"> Loop
                                 </label>
@@ -158,16 +169,16 @@
                             <input type="range" id="animCenterX" min="0" max="1" step="0.05">
                             
                             <div id="animLoopXControls" style="margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; display: none;">
-                                <label style="font-size: 0.75rem;">Loop Speed <span id="animLoopXSpeedVal">1.0</span>x</label>
+                                <label style="font-size: 0.75rem;">Loop Speed - <span id="animLoopXSpeedVal">1.0</span>x</label>
                                 <input type="range" id="animLoopXSpeed" min="0" max="1" step="0.05" value="0.5" style="margin-bottom: 8px;">
                                 
                                 <div style="display: flex; gap: 10px; margin-bottom: 5px;">
                                     <div style="flex: 1;">
-                                        <label style="font-size: 0.75rem;">Min <span id="animLoopXMinVal">0</span></label>
+                                        <label style="font-size: 0.75rem;">Min - <span id="animLoopXMinVal">0</span></label>
                                         <input type="range" id="animLoopXMin" min="0" max="1" step="0.05" value="0">
                                     </div>
                                     <div style="flex: 1;">
-                                        <label style="font-size: 0.75rem;">Max <span id="animLoopXMaxVal">1</span></label>
+                                        <label style="font-size: 0.75rem;">Max - <span id="animLoopXMaxVal">1</span></label>
                                         <input type="range" id="animLoopXMax" min="0" max="1" step="0.05" value="1">
                                     </div>
                                 </div>
@@ -177,7 +188,7 @@
                         <!-- Center Y Controls -->
                         <div style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label>Center Y <span id="animCenterYVal">0.5</span></label>
+                                <label>Center Y - <span id="animCenterYVal">0.5</span></label>
                                 <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
                                     <input type="checkbox" id="animLoopY"> Loop
                                 </label>
@@ -185,16 +196,16 @@
                             <input type="range" id="animCenterY" min="0" max="1" step="0.05">
 
                             <div id="animLoopYControls" style="margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; display: none;">
-                                <label style="font-size: 0.75rem;">Loop Speed <span id="animLoopYSpeedVal">1.0</span>x</label>
+                                <label style="font-size: 0.75rem;">Loop Speed - <span id="animLoopYSpeedVal">1.0</span>x</label>
                                 <input type="range" id="animLoopYSpeed" min="0" max="1" step="0.05" value="0.5" style="margin-bottom: 8px;">
                                 
                                 <div style="display: flex; gap: 10px; margin-bottom: 5px;">
                                     <div style="flex: 1;">
-                                        <label style="font-size: 0.75rem;">Min <span id="animLoopYMinVal">0</span></label>
+                                        <label style="font-size: 0.75rem;">Min - <span id="animLoopYMinVal">0</span></label>
                                         <input type="range" id="animLoopYMin" min="0" max="1" step="0.05" value="0">
                                     </div>
                                     <div style="flex: 1;">
-                                        <label style="font-size: 0.75rem;">Max <span id="animLoopYMaxVal">1</span></label>
+                                        <label style="font-size: 0.75rem;">Max - <span id="animLoopYMaxVal">1</span></label>
                                         <input type="range" id="animLoopYMax" min="0" max="1" step="0.05" value="1">
                                     </div>
                                 </div>
@@ -212,6 +223,9 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="group-content">
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; margin-top: 0;">
+                        The main pattern layer. Adjust dot density, size, and blending mode to create texture.
+                    </p>
                     <label>Blend Mode</label>
                     <select id="h1BlendMode">
                         <option value="color-dodge" selected>Color Dodge</option>
@@ -233,16 +247,16 @@
                         <input type="checkbox" id="h1AllowOverlap"> Allow Overlap
                     </label>
 
-                    <label>Opacity <span id="h1OpacityVal">0.8</span></label>
+                    <label>Opacity - <span id="h1OpacityVal">0.8</span></label>
                     <input type="range" id="h1Opacity" min="0" max="1" step="0.05">
 
-                    <label>Density <span id="h1DensityVal">40</span></label>
+                    <label>Density - <span id="h1DensityVal">40</span></label>
                     <input type="range" id="h1Density" min="10" max="100" step="1">
 
-                    <label>Min Size <span id="h1MinSizeVal">2</span></label>
+                    <label>Min Size - <span id="h1MinSizeVal">2</span></label>
                     <input type="range" id="h1MinSize" min="0" max="50" step="1">
 
-                    <label>Max Size <span id="h1MaxSizeVal">15</span></label>
+                    <label>Max Size - <span id="h1MaxSizeVal">15</span></label>
                     <input type="range" id="h1MaxSize" min="1" max="100" step="1">
                 </div>
             </div>
@@ -255,6 +269,9 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="group-content">
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; margin-top: 0;">
+                        Add a vignette gradient to darken edges and provide a clean area for text placement.
+                    </p>
                     <label>Blend Mode</label>
                     <select id="overlayBlendMode">
                         <option value="soft-light" selected>Soft Light</option>
@@ -263,10 +280,10 @@
                         <option value="normal">Normal</option>
                     </select>
 
-                    <label>Intensity <span id="overlayIntensityVal">0.6</span></label>
+                    <label>Intensity - <span id="overlayIntensityVal">0.6</span></label>
                     <input type="range" id="overlayIntensity" min="0" max="1" step="0.05">
 
-                    <label>Fade Size <span id="overlayHeightVal">0.4</span></label>
+                    <label>Fade Size - <span id="overlayHeightVal">0.4</span></label>
                     <input type="range" id="overlayHeight" min="0.1" max="1" step="0.05">
 
                     <label style="margin-top: 10px;">Position</label>
@@ -287,7 +304,10 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="group-content">
-                    <label>Thickness <span id="borderThicknessVal">40</span>px</label>
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; margin-top: 0;">
+                        Add a colored border around the edge of the canvas.
+                    </p>
+                    <label>Thickness - <span id="borderThicknessVal">40</span>px</label>
                     <input type="range" id="borderThickness" min="0" max="200" step="1">
 
                     <label>Color</label>
@@ -302,7 +322,7 @@
                         <option value="soft-light">Soft Light</option>
                     </select>
 
-                    <label>Opacity <span id="borderOpacityVal">0.4</span></label>
+                    <label>Opacity - <span id="borderOpacityVal">0.4</span></label>
                     <input type="range" id="borderOpacity" min="0" max="1" step="0.05" value="0.4">
                 </div>
             </div>
@@ -314,6 +334,9 @@
                     <span class="toggle-icon">▼</span>
                 </div>
                 <div class="group-content">
+                    <p style="font-size: 0.8rem; opacity: 0.7; margin-bottom: 15px; margin-top: 0;">
+                        Download your asset as a high-resolution image, video loop, or vector file.
+                    </p>
                     <label>Format</label>
                     <select id="exportFormat">
                         <option value="png">PNG (Image)</option>
@@ -329,7 +352,7 @@
                             <option value="3">3x (Ultra Res)</option>
                         </select>
                         <p id="exportDims" class="hint" style="margin-bottom: 10px;">Output: <span id="exportRes">1080 x 1080</span> px</p>
-                        <button id="downloadPngBtn" class="btn-primary" style="margin-top: 10px;">Download</button>
+                        <button id="downloadPngBtn" class="btn-primary" style="margin-top: 10px;">Download PNG</button>
                     </div>
 
                     <div id="videoControls" style="display: none;">

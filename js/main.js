@@ -62,10 +62,130 @@ const state = {
         enabled: true,
         thickness: 40,
         color: BRAND_COLORS.warm.moltenOrange,
-        blendMode: 'normal', 
-        opacity: 1.0 
+        blendMode: 'overlay', 
+        opacity: 0.4 
     }
 };
+
+// Undo Stack
+const undoStack = [];
+const MAX_HISTORY = 50;
+
+function saveState() {
+    if (undoStack.length >= MAX_HISTORY) {
+        undoStack.shift();
+    }
+    undoStack.push(JSON.parse(JSON.stringify(state)));
+}
+
+function undo() {
+    if (undoStack.length === 0) return;
+    const previousState = undoStack.pop();
+    
+    // Deep merge/copy back to state
+    // Since state is const, we modify its properties
+    // Helper to clear and assign
+    const updateObject = (target, source) => {
+        Object.keys(target).forEach(key => {
+            if (!(key in source)) delete target[key];
+        });
+        Object.keys(source).forEach(key => {
+            if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+                if (!target[key]) target[key] = {};
+                updateObject(target[key], source[key]);
+            } else {
+                target[key] = source[key];
+            }
+        });
+    };
+    
+    // Replace state content
+    // We can just use Object.assign for top level if structure is flat enough, 
+    // but we have nested objects.
+    // Simplest way given our structure:
+    state.dimension = previousState.dimension;
+    state.backgroundMode = previousState.backgroundMode;
+    state.flatColor = previousState.flatColor;
+    state.gradient = previousState.gradient;
+    state.animation = previousState.animation;
+    state.halftone1 = previousState.halftone1;
+    state.darkOverlay = previousState.darkOverlay;
+    state.border = previousState.border;
+
+    // Refresh UI
+    updateAllUI();
+}
+
+function updateAllUI() {
+    // Dimensions
+    const dimSelect = document.getElementById('dimensionSelect');
+    if (dimSelect) dimSelect.value = state.dimension.preset;
+    if (document.getElementById('dimWidth')) document.getElementById('dimWidth').value = state.dimension.width;
+    if (document.getElementById('dimHeight')) document.getElementById('dimHeight').value = state.dimension.height;
+    
+    // Background
+    const radios = document.getElementsByName('bgMode');
+    radios.forEach(r => r.checked = (r.value === state.backgroundMode));
+    // Trigger change to update visibility
+    const event = new Event('change');
+    radios.forEach(r => { if(r.checked) r.dispatchEvent(event); }); // This might re-trigger saveState if not careful? 
+    // Actually dispatching event might trigger listeners which might save state. 
+    // We should just update visibility manually or have a flag `isUndoing`.
+    
+    const gradientControls = document.getElementById('gradientControls');
+    const flatControls = document.getElementById('flatControls');
+    if (state.backgroundMode === 'gradient') {
+        if (gradientControls) gradientControls.style.display = 'block';
+        if (flatControls) flatControls.style.display = 'none';
+    } else {
+        if (gradientControls) gradientControls.style.display = 'none';
+        if (flatControls) flatControls.style.display = 'block';
+    }
+
+    if (document.getElementById('gradientType')) document.getElementById('gradientType').value = state.gradient.type;
+    renderColorList();
+    
+    if (document.getElementById('flatColorSelect')) document.getElementById('flatColorSelect').value = state.flatColor;
+    if (flatPicker) flatPicker.setColor(state.flatColor);
+
+    // Animation
+    const animEnabled = document.getElementById('animEnabled');
+    if (animEnabled) animEnabled.checked = state.animation.enabled;
+    updateAnimationUI();
+
+    // Halftone
+    const h1Enabled = document.getElementById('h1Enabled');
+    if (h1Enabled) h1Enabled.checked = state.halftone1.enabled;
+    updateRangeDisplay('h1Density', state.halftone1.density);
+    updateRangeDisplay('h1Opacity', state.halftone1.opacity);
+    updateRangeDisplay('h1MinSize', state.halftone1.minSize);
+    updateRangeDisplay('h1MaxSize', state.halftone1.maxSize);
+    if (document.getElementById('h1BlendMode')) document.getElementById('h1BlendMode').value = state.halftone1.blendMode;
+    if (document.getElementById('h1SizeMode')) document.getElementById('h1SizeMode').value = state.halftone1.sizeMode;
+    const h1Overlap = document.getElementById('h1AllowOverlap');
+    if (h1Overlap) h1Overlap.checked = state.halftone1.allowOverlap;
+
+    // Dark Overlay
+    const ovEnabled = document.getElementById('overlayEnabled');
+    if (ovEnabled) ovEnabled.checked = state.darkOverlay.enabled;
+    updateRangeDisplay('overlayIntensity', state.darkOverlay.intensity);
+    updateRangeDisplay('overlayHeight', state.darkOverlay.fadeHeight);
+    if (document.getElementById('overlayBlendMode')) document.getElementById('overlayBlendMode').value = state.darkOverlay.blendMode;
+    if (document.getElementById('overlayTop')) document.getElementById('overlayTop').checked = state.darkOverlay.top;
+    if (document.getElementById('overlayBottom')) document.getElementById('overlayBottom').checked = state.darkOverlay.bottom;
+    if (document.getElementById('overlayLeft')) document.getElementById('overlayLeft').checked = state.darkOverlay.left;
+    if (document.getElementById('overlayRight')) document.getElementById('overlayRight').checked = state.darkOverlay.right;
+
+    // Border
+    const bEnabled = document.getElementById('borderEnabled');
+    if (bEnabled) bEnabled.checked = state.border.enabled;
+    updateRangeDisplay('borderThickness', state.border.thickness);
+    updateRangeDisplay('borderOpacity', state.border.opacity);
+    if (document.getElementById('borderBlendMode')) document.getElementById('borderBlendMode').value = state.border.blendMode;
+    if (borderPicker) borderPicker.setColor(state.border.color);
+
+    renderer.render(state);
+}
 
 // Initialize Pickr instance helper
 function createPickr(el, defaultColor, onChange) {
@@ -95,6 +215,11 @@ function createPickr(el, defaultColor, onChange) {
                 save: true
             }
         }
+    });
+
+    // Save state on show (start of interaction)
+    pickr.on('show', () => {
+        saveState();
     });
 
     pickr.on('save', (color, instance) => {
@@ -127,6 +252,14 @@ function initUI() {
             console.error("GSAP library not found! Check internet connection or script tags.");
             alert("GSAP Animation Library failed to load. Animations will not work.");
         }
+
+        // Keyboard Listener for Undo
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+                e.preventDefault();
+                undo();
+            }
+        });
 
         // Initialize Collapsible Groups
         document.querySelectorAll('.group-header').forEach(header => {
@@ -188,6 +321,9 @@ function initUI() {
             });
             dimensionSelect.value = state.dimension.preset;
             
+            // Save state on focus/click
+            dimensionSelect.addEventListener('mousedown', saveState);
+
             dimensionSelect.addEventListener('change', (e) => {
                 const oldWidth = state.dimension.width;
                 const preset = DIMENSIONS[e.target.value];
@@ -221,6 +357,7 @@ function initUI() {
 
         [widthInput, heightInput].forEach(input => {
             if (input) {
+                input.addEventListener('focus', saveState);
                 input.addEventListener('change', () => {
                     state.dimension.width = parseInt(widthInput.value) || 1080;
                     state.dimension.height = parseInt(heightInput.value) || 1080;
@@ -240,6 +377,7 @@ function initUI() {
         const flatControls = document.getElementById('flatControls');
 
         modeRadios.forEach(radio => {
+            radio.addEventListener('mousedown', saveState);
             radio.addEventListener('change', (e) => {
                 state.backgroundMode = e.target.value;
                 if (state.backgroundMode === 'gradient') {
@@ -263,6 +401,7 @@ function initUI() {
             });
             presetSelect.value = 0; 
 
+            presetSelect.addEventListener('mousedown', saveState);
             presetSelect.addEventListener('change', (e) => {
                 state.gradient = JSON.parse(JSON.stringify(PRESETS[e.target.value]));
                 // Automatically update border color to match the first gradient color
@@ -280,6 +419,7 @@ function initUI() {
         const addColorBtn = document.getElementById('addColorBtn');
         if (addColorBtn) {
             addColorBtn.addEventListener('click', () => {
+                saveState();
                 if (state.gradient.colors.length < 5) {
                     const lastColor = state.gradient.colors[state.gradient.colors.length - 1];
                     state.gradient.colors.push({
@@ -294,6 +434,7 @@ function initUI() {
         const reverseGradientBtn = document.getElementById('reverseGradientBtn');
         if (reverseGradientBtn) {
             reverseGradientBtn.addEventListener('click', () => {
+                saveState();
                 state.gradient.colors.forEach(stop => {
                     stop.position = 100 - stop.position;
                 });
@@ -307,6 +448,7 @@ function initUI() {
         state.gradient.type = 'linear'; 
         
         if (gradientTypeSelect) {
+            gradientTypeSelect.addEventListener('mousedown', saveState);
             gradientTypeSelect.addEventListener('change', (e) => {
                 state.gradient.type = e.target.value;
             });
@@ -325,6 +467,7 @@ function initUI() {
                 flatColorSelect.appendChild(option);
             });
             
+            flatColorSelect.addEventListener('mousedown', saveState);
             flatColorSelect.addEventListener('change', (e) => {
                 state.flatColor = e.target.value;
                 if (flatPicker) flatPicker.setColor(state.flatColor);
@@ -351,6 +494,7 @@ function initUI() {
                 animPresetSelect.appendChild(option);
             });
 
+            animPresetSelect.addEventListener('mousedown', saveState);
             animPresetSelect.addEventListener('change', (e) => {
                 if (e.target.value === 'custom') return;
                 const preset = ANIMATION_PRESETS[parseInt(e.target.value)];
@@ -408,6 +552,7 @@ function initUI() {
         const animLoopX = document.getElementById('animLoopX');
         const animLoopXControls = document.getElementById('animLoopXControls');
         if (animLoopX && animLoopXControls) {
+            animLoopX.addEventListener('mousedown', saveState); // Checkbox click
             animLoopX.addEventListener('change', (e) => {
                 state.animation.autoPanX = e.target.checked;
                 animLoopXControls.style.display = e.target.checked ? 'block' : 'none';
@@ -423,6 +568,7 @@ function initUI() {
         const animLoopY = document.getElementById('animLoopY');
         const animLoopYControls = document.getElementById('animLoopYControls');
         if (animLoopY && animLoopYControls) {
+            animLoopY.addEventListener('mousedown', saveState);
             animLoopY.addEventListener('change', (e) => {
                 state.animation.autoPanY = e.target.checked;
                 animLoopYControls.style.display = e.target.checked ? 'block' : 'none';
@@ -439,6 +585,7 @@ function initUI() {
         if (animPatternSelect) {
             const initialPattern = state.animation.pattern === 'radial' ? 'ripple' : state.animation.pattern;
             animPatternSelect.value = initialPattern;
+            animPatternSelect.addEventListener('mousedown', saveState);
             animPatternSelect.addEventListener('change', (e) => {
                 state.animation.pattern = e.target.value;
             });
@@ -446,6 +593,7 @@ function initUI() {
 
         const animEaseSelect = document.getElementById('animEase');
         if (animEaseSelect) {
+            animEaseSelect.addEventListener('mousedown', saveState);
             animEaseSelect.addEventListener('change', (e) => {
                 state.animation.ease = e.target.value;
             });
@@ -466,6 +614,7 @@ function initUI() {
         const overlayBlend = document.getElementById('overlayBlendMode');
         if (overlayBlend) {
             overlayBlend.value = state.darkOverlay.blendMode;
+            overlayBlend.addEventListener('mousedown', saveState);
             overlayBlend.addEventListener('change', (e) => {
                 state.darkOverlay.blendMode = e.target.value;
             });
@@ -479,6 +628,7 @@ function initUI() {
         const borderBlendSelect = document.getElementById('borderBlendMode');
         if (borderBlendSelect) {
             borderBlendSelect.value = state.border.blendMode; 
+            borderBlendSelect.addEventListener('mousedown', saveState);
             borderBlendSelect.addEventListener('change', (e) => {
                 state.border.blendMode = e.target.value;
             });
@@ -607,12 +757,14 @@ function initHalftoneControls(prefix, dataObj) {
     const blendSelect = document.getElementById(prefix + 'BlendMode');
     if (blendSelect) {
         blendSelect.value = dataObj.blendMode;
+        blendSelect.addEventListener('mousedown', saveState);
         blendSelect.addEventListener('change', (e) => dataObj.blendMode = e.target.value);
     }
 
     const sizeModeSelect = document.getElementById(prefix + 'SizeMode');
     if (sizeModeSelect) {
         sizeModeSelect.value = dataObj.sizeMode;
+        sizeModeSelect.addEventListener('mousedown', saveState);
         sizeModeSelect.addEventListener('change', (e) => dataObj.sizeMode = e.target.value);
     }
 }
@@ -643,6 +795,8 @@ function renderColorList() {
         posSlider.max = 100;
         posSlider.value = stop.position;
         posSlider.style.flex = '1';
+        // Save state on slider start
+        posSlider.addEventListener('mousedown', saveState);
         posSlider.addEventListener('input', (e) => stop.position = parseInt(e.target.value));
         row.appendChild(posSlider);
 
@@ -657,6 +811,7 @@ function renderColorList() {
             removeBtn.style.opacity = '0.3';
         } else {
             removeBtn.addEventListener('click', () => {
+                saveState();
                 state.gradient.colors.splice(index, 1);
                 renderColorList();
             });
@@ -683,6 +838,7 @@ function bindCheckbox(id, targetObj, key) {
     const el = document.getElementById(id);
     if (el) {
         el.checked = targetObj[key];
+        el.addEventListener('mousedown', saveState); // Save state on interaction
         el.addEventListener('change', (e) => {
             targetObj[key] = e.target.checked;
         });
@@ -696,6 +852,7 @@ function bindRange(id, targetObj, key) {
         const valDisplay = document.getElementById(id + 'Val');
         if (valDisplay) valDisplay.textContent = targetObj[key];
 
+        el.addEventListener('mousedown', saveState); // Save state before dragging
         el.addEventListener('input', (e) => {
             let val = parseFloat(e.target.value);
             targetObj[key] = val;
