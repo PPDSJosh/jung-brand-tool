@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG Jung Institute - Brand Asset Generator</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Color Picker Library -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/themes/monolith.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr/dist/pickr.min.js"></script>
+    <!-- GSAP Animation Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <header>
+                <h1>CG Jung Institute</h1>
+                <h2>Asset Generator</h2>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button id="expandAllBtn" class="btn-secondary" style="font-size: 0.7rem; flex: 1;">Expand All</button>
+                    <button id="collapseAllBtn" class="btn-secondary" style="font-size: 0.7rem; flex: 1;">Collapse All</button>
+                </div>
+            </header>
+
+            <!-- 1. Canvas Settings -->
+            <div class="control-group" id="group-canvas">
+                <div class="group-header">
+                    <h3>Canvas Settings</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="group-content">
+                    <label for="dimensionSelect">Dimensions</label>
+                    <select id="dimensionSelect"></select>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <div style="flex: 1;">
+                            <label>Width</label>
+                            <input type="number" id="dimWidth" value="1080">
+                        </div>
+                        <div style="flex: 1;">
+                            <label>Height</label>
+                            <input type="number" id="dimHeight" value="1080">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Background -->
+            <div class="control-group" id="group-background">
+                <div class="group-header">
+                    <h3>Background</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="group-content">
+                    <div class="radio-group" style="display: flex; gap: 15px; margin-bottom: 15px;">
+                        <label style="display: inline-flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="bgMode" value="gradient" checked> Gradient
+                        </label>
+                        <label style="display: inline-flex; align-items: center; gap: 5px;">
+                            <input type="radio" name="bgMode" value="flat"> Flat Color
+                        </label>
+                    </div>
+
+                    <div id="gradientControls">
+                        <label for="presetSelect">Preset Scheme</label>
+                        <select id="presetSelect" style="margin-bottom: 15px;"></select>
+
+                        <label>Gradient Style</label>
+                        <select id="gradientType" style="margin-bottom: 15px;">
+                            <option value="linear" selected>Linear</option>
+                            <option value="radial">Radial</option>
+                            <option value="angle">Angle (Conic)</option>
+                            <option value="reflected">Reflected</option>
+                        </select>
+                        
+                        <label>Custom Colors</label>
+                        <div class="gradient-actions" style="display: flex; gap: 10px; margin-bottom: 10px;">
+                            <button id="reverseGradientBtn" class="btn-secondary" style="flex: 1; font-size: 0.8rem;">Reverse Colors</button>
+                            <button id="addColorBtn" class="btn-secondary" style="flex: 1; font-size: 0.8rem;">+ Add Color</button>
+                        </div>
+                        <div id="colorList" class="color-list"></div>
+                    </div>
+
+                    <div id="flatControls" style="display: none;">
+                        <label for="flatColorSelect">Background Color</label>
+                        <select id="flatColorSelect" style="margin-bottom: 10px;"></select>
+                        <label>Custom Color</label>
+                        <div id="flatColorPicker"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Animation Engine -->
+            <div class="control-group" id="group-animation">
+                <div class="group-header">
+                    <h3>Animation Engine</h3>
+                    <input type="checkbox" id="animEnabled" checked>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="group-content">
+                    <label>Preset</label>
+                    <select id="animPresetSelect" style="margin-bottom: 15px;">
+                        <option value="custom">Custom</option>
+                    </select>
+
+                    <label>Animation Style</label>
+                    <select id="animPattern" style="margin-bottom: 10px;">
+                        <option value="none">None</option>
+                        <option value="flow">Flow (Noise)</option>
+                        <option value="ripple" selected>Ripple (Radial)</option>
+                        <option value="ocean">Ocean (Linear)</option>
+                        <option value="dual-reverb">Dual Reverberation</option>
+                        <option value="dual-ripple">Dual Ripple</option>
+                        <option value="rain">Raindrops (Ripples)</option>
+                    </select>
+
+                    <label>Motion Ease</label>
+                    <select id="animEase" style="margin-bottom: 10px;">
+                        <option value="none" selected>Linear (Constant)</option>
+                        <option value="power1.inOut">Sine (Smooth)</option>
+                        <option value="power2.inOut">Quad (Sharper)</option>
+                        <option value="elastic.out">Elastic (Bouncy)</option>
+                        <option value="back.out">Back (Overshoot)</option>
+                        <option value="bounce.out">Bounce (Hit)</option>
+                    </select>
+
+                    <!-- Advanced Settings Toggle -->
+                    <a href="#" id="animAdvancedToggle" style="display: block; text-align: center; font-size: 0.8rem; color: #00AFD8; text-decoration: none; margin: 15px 0 5px;">Show Advanced Settings ▼</a>
+
+                    <div id="animAdvancedContent" style="display: none; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; margin-top: 10px;">
+                        <label>Speed <span id="animSpeedVal">3</span></label>
+                        <input type="range" id="animSpeed" min="0" max="5" step="0.1">
+
+                        <label>Impact (Amplitude) <span id="animAmpVal">0.3</span></label>
+                        <span class="help-text">Strength of the wave distortion.</span>
+                        <input type="range" id="animAmp" min="0" max="1" step="0.05">
+
+                        <label>Scale (Frequency) <span id="animFreqVal">1.0</span></label>
+                        <span class="help-text">Zoom level of the pattern details.</span>
+                        <input type="range" id="animFreq" min="0.1" max="5.0" step="0.1">
+
+                        <label>Separation (Spread) <span id="animSpreadVal">0.5</span></label>
+                        <span class="help-text">Distance between dual wave centers.</span>
+                        <input type="range" id="animSpread" min="0" max="1" step="0.05">
+
+                        <label>Rotation <span id="animRotationVal">0</span>°</label>
+                        <input type="range" id="animRotation" min="0" max="360" step="1">
+
+                        <!-- Center X Controls -->
+                        <div style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label>Center X <span id="animCenterXVal">0.5</span></label>
+                                <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="animLoopX"> Loop
+                                </label>
+                            </div>
+                            <input type="range" id="animCenterX" min="0" max="1" step="0.05">
+                            
+                            <div id="animLoopXControls" style="margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; display: none;">
+                                <label style="font-size: 0.75rem;">Loop Speed <span id="animLoopXSpeedVal">1.0</span>x</label>
+                                <input type="range" id="animLoopXSpeed" min="0" max="1" step="0.05" value="0.5" style="margin-bottom: 8px;">
+                                
+                                <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.75rem;">Min <span id="animLoopXMinVal">0</span></label>
+                                        <input type="range" id="animLoopXMin" min="0" max="1" step="0.05" value="0">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.75rem;">Max <span id="animLoopXMaxVal">1</span></label>
+                                        <input type="range" id="animLoopXMax" min="0" max="1" step="0.05" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Center Y Controls -->
+                        <div style="margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.05); border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label>Center Y <span id="animCenterYVal">0.5</span></label>
+                                <label style="font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                                    <input type="checkbox" id="animLoopY"> Loop
+                                </label>
+                            </div>
+                            <input type="range" id="animCenterY" min="0" max="1" step="0.05">
+
+                            <div id="animLoopYControls" style="margin-top: 8px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 8px; display: none;">
+                                <label style="font-size: 0.75rem;">Loop Speed <span id="animLoopYSpeedVal">1.0</span>x</label>
+                                <input type="range" id="animLoopYSpeed" min="0" max="1" step="0.05" value="0.5" style="margin-bottom: 8px;">
+                                
+                                <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.75rem;">Min <span id="animLoopYMinVal">0</span></label>
+                                        <input type="range" id="animLoopYMin" min="0" max="1" step="0.05" value="0">
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <label style="font-size: 0.75rem;">Max <span id="animLoopYMaxVal">1</span></label>
+                                        <input type="range" id="animLoopYMax" min="0" max="1" step="0.05" value="1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Halftone Layer 1 -->
+            <div class="control-group" id="group-h1">
+                <div class="group-header">
+                    <h3>Halftone Primary</h3>
+                    <input type="checkbox" id="h1Enabled" checked>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="group-content">
+                    <label>Blend Mode</label>
+                    <select id="h1BlendMode">
+                        <option value="color-dodge" selected>Color Dodge</option>
+                        <option value="difference">Difference</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="screen">Screen</option>
+                        <option value="overlay">Overlay</option>
+                    </select>
+
+                    <label>Size Mode</label>
+                    <select id="h1SizeMode" style="margin-bottom: 10px;">
+                        <option value="noise">Perlin Noise</option>
+                        <option value="radial">Radial Gradient</option>
+                        <option value="uniform">Uniform (Flat)</option>
+                        <option value="linear">Linear Gradient</option>
+                    </select>
+
+                    <label class="checkbox-label" style="margin-bottom: 10px;">
+                        <input type="checkbox" id="h1AllowOverlap"> Allow Overlap
+                    </label>
+
+                    <label>Opacity <span id="h1OpacityVal">0.8</span></label>
+                    <input type="range" id="h1Opacity" min="0" max="1" step="0.05">
+
+                    <label>Density <span id="h1DensityVal">40</span></label>
+                    <input type="range" id="h1Density" min="10" max="100" step="1">
+
+                    <label>Min Size <span id="h1MinSizeVal">2</span></label>
+                    <input type="range" id="h1MinSize" min="0" max="50" step="1">
+
+                    <label>Max Size <span id="h1MaxSizeVal">15</span></label>
+                    <input type="range" id="h1MaxSize" min="1" max="100" step="1">
+                </div>
+            </div>
+
+            <!-- 5. Dark Overlay -->
+            <div class="control-group" id="group-overlay">
+                <div class="group-header">
+                    <h3>Dark Overlay</h3>
+                    <input type="checkbox" id="overlayEnabled" checked>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="group-content">
+                    <label>Blend Mode</label>
+                    <select id="overlayBlendMode">
+                        <option value="soft-light" selected>Soft Light</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="overlay">Overlay</option>
+                        <option value="normal">Normal</option>
+                    </select>
+
+                    <label>Intensity <span id="overlayIntensityVal">0.6</span></label>
+                    <input type="range" id="overlayIntensity" min="0" max="1" step="0.05">
+
+                    <label>Fade Size <span id="overlayHeightVal">0.4</span></label>
+                    <input type="range" id="overlayHeight" min="0.1" max="1" step="0.05">
+
+                    <label style="margin-top: 10px;">Position</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                        <label class="checkbox-label"><input type="checkbox" id="overlayTop" checked> Top</label>
+                        <label class="checkbox-label"><input type="checkbox" id="overlayBottom"> Bottom</label>
+                        <label class="checkbox-label"><input type="checkbox" id="overlayLeft"> Left</label>
+                        <label class="checkbox-label"><input type="checkbox" id="overlayRight"> Right</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. Border Layer -->
+            <div class="control-group" id="group-border">
+                <div class="group-header">
+                    <h3>Border Frame</h3>
+                    <input type="checkbox" id="borderEnabled" checked>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="group-content">
+                    <label>Thickness <span id="borderThicknessVal">40</span>px</label>
+                    <input type="range" id="borderThickness" min="0" max="200" step="1">
+
+                    <label>Color</label>
+                    <div id="borderColorPicker"></div>
+
+                    <label style="margin-top: 10px;">Blend Mode</label>
+                    <select id="borderBlendMode">
+                        <option value="overlay" selected>Overlay</option>
+                        <option value="normal">Normal</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="screen">Screen</option>
+                        <option value="soft-light">Soft Light</option>
+                    </select>
+
+                    <label>Opacity <span id="borderOpacityVal">0.4</span></label>
+                    <input type="range" id="borderOpacity" min="0" max="1" step="0.05" value="0.4">
+                </div>
+            </div>
+
+            <!-- 7. Export -->
+            <div class="control-group" id="group-export">
+                <div class="group-header">
+                    <h3>Export</h3>
+                    <span class="toggle-icon">▼</span>
+                </div>
+                <div class="group-content">
+                    <label>Format</label>
+                    <select id="exportFormat">
+                        <option value="png">PNG (Image)</option>
+                        <option value="webm">WebM (Video)</option>
+                        <option value="svg">SVG (Vector)</option>
+                    </select>
+
+                    <div id="pngControls">
+                        <label>Scale Factor</label>
+                        <select id="exportScale">
+                            <option value="1">1x (Original)</option>
+                            <option value="2">2x (High Res)</option>
+                            <option value="3">3x (Ultra Res)</option>
+                        </select>
+                        <p id="exportDims" class="hint" style="margin-bottom: 10px;">Output: <span id="exportRes">1080 x 1080</span> px</p>
+                        <button id="downloadPngBtn" class="btn-primary" style="margin-top: 10px;">Download</button>
+                    </div>
+
+                    <div id="videoControls" style="display: none;">
+                        <label>Duration (Seconds)</label>
+                        <input type="number" id="exportDuration" value="5" min="1" max="30">
+                        
+                        <label>Quality (Bitrate)</label>
+                        <select id="exportQuality">
+                            <option value="8000000">High (8 Mbps)</option>
+                            <option value="16000000">Very High (16 Mbps)</option>
+                            <option value="25000000" selected>Ultra (25 Mbps)</option>
+                            <option value="50000000">Lossless-ish (50 Mbps)</option>
+                        </select>
+
+                        <button id="recordBtn" class="btn-primary" style="margin-top: 10px;">Start Recording</button>
+                        <p id="recordStatus" class="hint" style="display:none;">Recording...</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="preview-area">
+            <div class="canvas-wrapper">
+                <canvas id="mainCanvas"></canvas>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
